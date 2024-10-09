@@ -1,68 +1,68 @@
+// app.js
+const video = document.getElementById('video');
+const videoSource = document.getElementById('video-source');
 const addAnimeButton = document.getElementById('add-anime');
 const animeUrlInput = document.getElementById('anime-url');
 const playlist = document.getElementById('playlist');
-const video = document.getElementById('video');
-const videoSource = document.getElementById('video-source');
 
-const socket = new WebSocket('ws://localhost:3000'); // URL do servidor WebSocket
+// Função para carregar a URL do vídeo
+function loadVideo(url) {
+    videoSource.src = url;
+    video.load();
+    video.play();
+}
 
-socket.onmessage = function(event) {
-    const message = JSON.parse(event.data);
-    if (message.type === 'loadVideo') {
-        loadVideo(message.url);
-    } else if (message.type === 'play') {
-        video.play();
-    } else if (message.type === 'pause') {
-        video.pause();
-    } else if (message.type === 'seek') {
-        video.currentTime = message.currentTime;
-    }
-};
-
+// Adiciona o evento para o botão
 addAnimeButton.addEventListener('click', () => {
     const url = animeUrlInput.value.trim();
     if (url) {
         // Adiciona à playlist
         const listItem = document.createElement('li');
         listItem.textContent = url;
-        
-        const playButton = document.createElement('button');
-        playButton.textContent = 'Assistir';
-        playButton.onclick = () => {
-            loadVideo(url);
-            socket.send(JSON.stringify({ type: 'loadVideo', url: url }));
-        };
-
-        const removeButton = document.createElement('button');
-        removeButton.textContent = 'Remover';
-        removeButton.onclick = () => {
-            playlist.removeChild(listItem);
-        };
-
-        listItem.appendChild(playButton);
-        listItem.appendChild(removeButton);
+        listItem.addEventListener('click', () => loadVideo(url));
         playlist.appendChild(listItem);
 
-        // Limpa o campo de entrada
+        // Salva a URL no arquivo (simulação)
+        saveUrl(url);
+
         animeUrlInput.value = '';
     }
 });
 
-function loadVideo(url) {
-    // Atualiza a fonte do vídeo e carrega
-    videoSource.src = url;
-    video.load();
-    video.play();
+// Função para salvar a URL em um arquivo (simulação)
+function saveUrl(url) {
+    fetch('save-url', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ url })
+    }).then(response => {
+        if (!response.ok) {
+            console.error('Erro ao salvar a URL');
+        }
+    }).catch(error => {
+        console.error('Erro:', error);
+    });
 }
 
-video.addEventListener('play', () => {
-    socket.send(JSON.stringify({ type: 'play' }));
-});
+// Função para buscar URLs armazenadas (simulação)
+function fetchUrls() {
+    fetch('urls.txt')
+        .then(response => response.text())
+        .then(data => {
+            const urls = data.split('\n').filter(Boolean);
+            urls.forEach(url => {
+                const listItem = document.createElement('li');
+                listItem.textContent = url;
+                listItem.addEventListener('click', () => loadVideo(url));
+                playlist.appendChild(listItem);
+            });
+        })
+        .catch(error => {
+            console.error('Erro ao buscar URLs:', error);
+        });
+}
 
-video.addEventListener('pause', () => {
-    socket.send(JSON.stringify({ type: 'pause' }));
-});
-
-video.addEventListener('seeked', () => {
-    socket.send(JSON.stringify({ type: 'seek', currentTime: video.currentTime }));
-});
+// Carregar URLs ao iniciar
+fetchUrls();
