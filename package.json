@@ -1,0 +1,12 @@
+{
+  "name": "anime-watch-together",
+  "version": "1.0.0",
+  "description": "Um site para assistir animes juntos em tempo real.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "ws": "^8.5.0"
+  }
+}

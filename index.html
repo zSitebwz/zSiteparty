@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assista Anime Juntos - zYuutashiro</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+        #video-container {
+            width: 80%;
+            max-width: 800px;
+            margin-bottom: 20px;
+            border: 2px solid #444;
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: #222;
+        }
+        video {
+            width: 100%;
+            border: none;
+        }
+        button {
+            margin: 10px;
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #007BFF;
+            border: none;
+            color: white;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #add-anime-container {
+            margin-bottom: 20px;
+        }
+        input {
+            margin: 5px 0;
+            padding: 10px;
+            border: 1px solid #fff;
+            border-radius: 4px;
+            background: #444;
+            color: white;
+        }
+        #playlist {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+            max-width: 800px;
+            width: 100%;
+            background-color: #222;
+            border-radius: 8px;
+        }
+        #playlist li {
+            padding: 10px;
+            border-bottom: 1px solid #444;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #playlist li:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Assista Anime Juntos - zYuutashiro</h1>
+
+    <div id="video-container">
+        <video id="video" controls>
+            <source id="video-source" src="" type="video/mp4">
+            Seu navegador não suporta vídeo.
+        </video>
+    </div>
+
+    <div id="add-anime-container">
+        <input type="text" id="anime-url" placeholder="Coloque a URL do anime" required>
+        <button id="add-anime">Adicionar à Playlist</button>
+    </div>
+
+    <ul id="playlist"></ul>
+
+    <script src="app.js"></script>
+</body>
+</html>
