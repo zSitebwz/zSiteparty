@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assistir em Party com zYuuta</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+        h1 {
+            color: #00acee;
+            font-size: 3em;
+            margin-bottom: 20px;
+        }
+        #video-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 80%;
+        }
+        video {
+            width: 100%;
+            height: auto;
+            border: 2px solid #00acee;
+            border-radius: 10px;
+        }
+        #controls {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        input {
+            width: 100%;
+            max-width: 400px;
+            padding: 10px;
+            font-size: 1.2em;
+            border-radius: 5px;
+            border: none;
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #playlist {
+            margin-top: 20px;
+            width: 100%;
+        }
+        .video-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .video-item button {
+            background-color: #dc3545; /* Botão vermelho para remover */
+        }
+    </style>
+</head>
+<body>
+    <h1>Assistir em Party com zYuuta</h1>
+
+    <div id="video-container">
+        <video id="my-video_html5_api" class="vjs-tech" preload="auto" controls
+            poster="https://media.discordapp.net/attachments/1289732797162061938/1293616960571052174/images_1.png?ex=6708062d&is=6706b4ad&hm=39e2b0d35e09895d71d76685dcc82922d73a1367930b353493880c3a82d371fc&=&format=webp&quality=lossless&width=718&height=405">
+        </video>
+
+        <div id="controls">
+            <input type="text" id="video-url" placeholder="Cole aqui a URL do vídeo">
+            <button id="load-video">Carregar vídeo</button>
+        </div>
+    </div>
+
+    <div id="playlist">
+        <h2>Playlist</h2>
+        <div id="video-list"></div>
+    </div>
+
+    <script>
+        const socket = io();
+        const videoElement = document.getElementById('my-video_html5_api');
+        const videoUrlInput = document.getElementById('video-url');
+        const loadVideoButton = document.getElementById('load-video');
+        const videoList = document.getElementById('video-list');
+
+        let currentVideoUrl = '';
+        let isPlaying = false;
+
+        // Carregar vídeo quando o botão é clicado
+        loadVideoButton.addEventListener('click', () => {
+            const newUrl = videoUrlInput.value.trim();
+
+            if (newUrl) {
+                socket.emit('request-load', newUrl);
+                videoUrlInput.value = ''; // Limpa o campo de entrada após o envio
+            } else {
+                alert('Por favor, insira uma URL válida.');
+            }
+        });
+
+        // Atualiza a lista de vídeos na interface
+        function updateVideoList(url) {
+            const videoItem = document.createElement('div');
+            videoItem.className = 'video-item';
+            videoItem.innerHTML = `
+                <span>${url}</span>
+                <button onclick="removeVideo('${url}')">Remover</button>
+            `;
+            videoList.appendChild(videoItem);
+        }
+
+        // Remove vídeo da lista e solicita ao servidor
+        function removeVideo(url) {
+            socket.emit('remove-video', url);
+        }
+
+        // Recebe o vídeo carregado do servidor
+        socket.on('load-video', (data) => {
+            currentVideoUrl = data.url;
+            isPlaying = data.isPlaying;
+
+            videoElement.src = `/proxy?url=${encodeURIComponent(currentVideoUrl)}`;
+            videoElement.load();
+
+            // Inicia a reprodução ou pausa de acordo com o estado
+            if (isPlaying) {
+                videoElement.play().catch(error => {
+                    console.error('Erro ao tentar dar play:', error);
+                });
+            } else {
+                videoElement.pause(); // Pause se o estado for false
+            }
+
+            updateVideoList(currentVideoUrl); // Atualiza a lista de vídeos
+        });
+
+        // Sincroniza o estado do vídeo para novos usuários
+        socket.on('sync-video', (data) => {
+            currentVideoUrl = data.url;
+            isPlaying = data.isPlaying;
+
+            videoElement.src = `/proxy?url=${encodeURIComponent(currentVideoUrl)}`;
+            videoElement.load();
+            videoElement.currentTime = data.currentTime; // Sincroniza o tempo
+
+            // Reproduz ou pausa o vídeo conforme necessário
+            if (isPlaying) {
+                videoElement.play().catch(error => {
+                    console.error('Erro ao tentar dar play:', error);
+                });
+            } else {
+                videoElement.pause();
+            }
+        });
+
+        // Sincroniza quando um usuário pula o vídeo
+        videoElement.addEventListener('seeked', () => {
+            const currentTime = videoElement.currentTime;
+            socket.emit('video-seeked', currentTime);
+        });
+
+        // Recebe a nova posição do vídeo quando um usuário pula
+        socket.on('video-seeked', (time) => {
+            videoElement.currentTime = time;
+            if (isPlaying) {
+                videoElement.play().catch(error => {
+                    console.error('Erro ao tentar dar play após pular:', error);
+                });
+            }
+        });
+
+        // Eventos de play/pause
+        videoElement.addEventListener('play', () => {
+            if (!isPlaying) {
+                isPlaying = true; // Atualiza o estado local
+                socket.emit('play-video'); // Notifica os outros usuários
+            }
+        });
+
+        videoElement.addEventListener('pause', () => {
+            if (isPlaying) {
+                isPlaying = false; // Atualiza o estado local
+                socket.emit('pause-video'); // Notifica os outros usuários
+            }
+        });
+
+        // Atualiza a lista de vídeos removidos
+        socket.on('remove-video', (url) => {
+            const videoItems = document.querySelectorAll('.video-item');
+            videoItems.forEach(item => {
+                if (item.firstChild.textContent === url) {
+                    item.remove();
+                }
+            });
+        });
+
+        // Solicita a sincronização de estado e tempo do vídeo ao conectar
+        socket.emit('request-sync');
+    </script>
+</body>
+</html>

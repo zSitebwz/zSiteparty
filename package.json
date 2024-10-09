@@ -1,17 +1,17 @@
 {
-  "name": "anime-watch-together",
+  "name": "meu-projeto",
   "version": "1.0.0",
-  "description": "Um site para assistir animes juntos em tempo real.",
-  "main": "server.js",
+  "description": "Projeto com sincronização de vídeo e socket.io",
+  "main": "app.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node app.js"
   },
   "dependencies": {
-    "body-parser": "^1.20.3",
     "cors": "^2.8.5",
+    "cors-anywhere": "^0.4.4",
     "express": "^4.21.1",
-    "fs": "^0.0.1-security",
+    "request": "^2.88.2",
     "socket.io": "^4.8.0",
-    "ws": "^8.18.0"
+    "video.js": "^8.18.1"
   }
 }
